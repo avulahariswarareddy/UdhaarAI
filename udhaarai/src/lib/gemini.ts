@@ -6,11 +6,11 @@ import { salvageJson } from "@/lib/verify/model-output";
  * SERVER ONLY. The Gemini key never reaches the browser — every call in
  * this file runs inside a Next.js route handler.
  *
- * Model choice: gemini-2.0-flash is on the free tier and handles
- * multilingual handwriting well. Keep generation deterministic
- * (temperature 0) so the same page reads the same way twice.
+ * Model choice: gemini-2.5-flash handles multilingual handwriting well.
+ * Keep generation deterministic (temperature 0) so the same page reads
+ * the same way twice.
  */
-function model(name = "gemini-2.0-flash") {
+function model(name = "gemini-2.5-flash") {
   const genAI = new GoogleGenerativeAI(serverEnv().geminiKey);
   return genAI.getGenerativeModel({ model: name });
 }

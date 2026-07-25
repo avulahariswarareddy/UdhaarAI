@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
+import SplashScreen from "@/components/SplashScreen";
 import "./globals.css";
 
 const DESCRIPTION =
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="relative">
         <div className="relative z-10">{children}</div>
+        <SplashScreen />
         <Toaster
           position="bottom-center"
           toastOptions={{
