@@ -27,12 +27,39 @@ const securityHeaders = [
   },
 ];
 
+// The splash animation (public/splash/) is a self-contained third-party
+// runtime: it loads React/ReactDOM/Babel from unpkg.com and uses Babel's
+// in-browser JSX transform (a Function() constructor call, which CSP treats
+// as eval), and it's loaded same-origin in an <iframe> by SplashScreen.tsx.
+// The site-wide headers above (X-Frame-Options: DENY, frame-ancestors
+// 'none', no unsafe-eval, no unpkg.com) block all of that outright. Scoped
+// here to /splash/* only — 'self' framing and eval stay off everywhere
+// else in the app.
+const splashHeaders = [
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: blob:",
+      "connect-src 'self'",
+      "frame-ancestors 'self'",
+    ].join("; "),
+  },
+];
+
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   images: { remotePatterns: [{ protocol: "https", hostname: "**.supabase.co" }] },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      { source: "/splash/:path*", headers: splashHeaders },
+    ];
   },
 };
 
