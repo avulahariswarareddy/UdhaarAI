@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 const SESSION_KEY = "udhaarai-splash-shown";
 // Sum of window.OM_SCENES durations in public/splash/splash.dc.html.
 // Keep in sync if the scene timings there change.
 const SPLASH_DURATION_MS = 10700;
 const FADE_MS = 550;
+
+// useLayoutEffect fires before the browser paints, so the overlay is up
+// before the real page underneath gets a single frame — plain useEffect
+// would let that first frame flash through. Only safe because this
+// component is client-only ("use client"); guarded so SSR doesn't warn.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 /**
  * Plays the animated splash once per browser session, then fades into the
@@ -17,7 +23,7 @@ export default function SplashScreen() {
   const [visible, setVisible] = useState(false);
   const [fading, setFading] = useState(false);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     let alreadyShown = true;
     try {
       alreadyShown = sessionStorage.getItem(SESSION_KEY) === "1";

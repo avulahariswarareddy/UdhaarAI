@@ -323,9 +323,8 @@ export function ReviewScreen({
             <Plus size={15} /> Add a row it missed
           </button>
 
-          {/* pr-20 on mobile keeps these controls clear of the assistant dock,
-              which is fixed to the bottom-right corner */}
-          <div className="sticky bottom-4 flex flex-wrap items-center gap-3 rounded-2xl border border-brand/15 bg-navy/95 p-3 pr-20 backdrop-blur-xl sm:pr-3">
+          {/* pr-24 clears the assistant dock's fixed bottom-5 right-5 launcher (84px footprint) at every width */}
+          <div className="sticky bottom-4 flex flex-wrap items-center gap-3 rounded-2xl border border-brand/15 bg-navy/95 p-3 pr-24 backdrop-blur-xl">
             <button onClick={save} disabled={saving || !rows.length}
               className="inline-flex items-center gap-2 rounded-xl bg-good px-5 py-3 font-semibold text-[#04210F] transition hover:brightness-110 active:scale-95 disabled:opacity-40">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
