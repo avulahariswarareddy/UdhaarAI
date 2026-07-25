@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background:
+    radial-gradient(1100px 620px at 82% -12%, rgba(245, 158, 11, 0.16), transparent 60%),
+    radial-gradient(760px 520px at 8% 108%, rgba(34, 197, 94, 0.11), transparent 62%),
+    #0b1220;
+  background-attachment: fixed;
+  color: #fff;
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+/* The ruled-notebook wash. The whole product is about a paper notebook,
+   so the paper stays visible behind the software. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.028) 0 1px,
+    transparent 1px 34px
+  );
+  z-index: 0;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(245, 158, 11, 0.14);
+  backdrop-filter: blur(10px);
+}
+
+.field-flag {
+  background: rgba(245, 158, 11, 0.09);
+  border-color: rgba(245, 158, 11, 0.55);
+}
+
+::selection { background: #f59e0b; color: #0b1220; }
+
+*:focus-visible {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0b1220; }
+::-webkit-scrollbar-thumb { background: #1b263b; border-radius: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Liquid glass                                                       */
+/*  Layered: a blurred backdrop with saturation lift, a soft inner top */
+/*  highlight, and a hairline edge. The saturation is what stops it    */
+/*  reading as flat grey frosting.                                     */
+/* ------------------------------------------------------------------ */
+.liquid {
+  position: relative;
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.09),
+    rgba(255, 255, 255, 0.035) 42%,
+    rgba(255, 255, 255, 0.055)
+  );
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+    0 12px 40px rgba(0, 0, 0, 0.38);
+}
+
+/* The specular sweep along the top edge — the thing that makes glass
+   read as glass rather than as a translucent rectangle. */
+.liquid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    130deg,
+    rgba(255, 255, 255, 0.5),
+    rgba(255, 255, 255, 0) 32%,
+    rgba(255, 255, 255, 0) 68%,
+    rgba(245, 158, 11, 0.28)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.liquid-hover {
+  transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 260ms ease, background 260ms ease;
+}
+.liquid-hover:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 18px 52px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(245, 158, 11, 0.16);
+}
+
+/* Backdrop-filter is expensive on low-end Android, which is exactly the
+   hardware this product runs on. Drop to a solid panel there. */
+@media (max-width: 480px) {
+  .liquid {
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .liquid { background: rgba(19, 28, 46, 0.96); }
+}
+
+/* Horizontal nav on mobile: scroll, but don't show a scrollbar. */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

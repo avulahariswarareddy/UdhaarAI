@@ -1,0 +1,38 @@
+{
+  "name": "udhaarai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm test && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "tsx tests/verify.test.ts && tsx tests/security.test.ts && tsx tests/risk.test.ts && tsx tests/model-output.test.ts && tsx tests/receipt.test.ts && tsx tests/analytics.test.ts && tsx tests/intent.test.ts && tsx tests/insights.test.ts && tsx tests/reminder.test.ts",
+    "preflight": "node scripts/preflight.mjs",
+    "orphans": "python3 scripts/find-orphans.py"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.45.4",
+    "framer-motion": "^11.11.9",
+    "lucide-react": "^0.454.0",
+    "next": "15.0.3",
+    "pdf-lib": "^1.17.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.13.3",
+    "sonner": "^1.7.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
