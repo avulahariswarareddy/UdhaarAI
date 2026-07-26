@@ -153,11 +153,13 @@ export async function extractLedger(
         ],
       },
     ],
+    // No maxOutputTokens: current-generation models spend output budget on
+    // internal reasoning before emitting the JSON, so a tight cap gets
+    // consumed before any answer appears. The schema keeps output bounded.
     generationConfig: {
       temperature: 0,
       responseMimeType: "application/json",
       responseSchema: LEDGER_SCHEMA as never,
-      maxOutputTokens: 4096,
     },
   }));
 
@@ -282,9 +284,9 @@ Return ONLY raw JSON, no markdown fence:
 {"variants":[{"label":"warm","body":"..."},{"label":"standard","body":"..."},{"label":"brief","body":"..."}]}`,
       }],
     }],
+    // No maxOutputTokens — see extractLedger; reasoning eats tight caps.
     generationConfig: {
       temperature: 0.85,
-      maxOutputTokens: 1200,
       responseMimeType: "application/json",
       responseSchema: REMINDER_SCHEMA as never,
     },
