@@ -12,19 +12,24 @@ function model(name: string) {
 }
 
 /**
- * Free-tier quota is tracked PER MODEL per day — draining
- * gemini-2.5-flash's daily bucket says nothing about its siblings'. Every
- * call walks this chain and moves to the next model only on a quota
- * rejection (or an unknown-model 404), so one empty bucket degrades output
- * quality instead of killing the feature. Ordered by quality:
- * 2.5-flash reads multilingual handwriting best; the lite and 2.0 models
- * are competent fallbacks.
+ * Every call walks this chain, moving to the next model only when Google
+ * rejects one over quota (free-tier buckets are per model per day) or
+ * because the key's project can't use it — Google retired the 2.x family
+ * for newly-created projects, where those names 404 with "no longer
+ * available to new users". Led by gemini-flash-latest, Google's rolling
+ * alias for the current flash model, so the chain keeps working across
+ * future generation changes; explicit current-generation names back it
+ * up, and the legacy 2.5 names stay at the tail for keys on older
+ * projects that can still call them.
  */
 const MODEL_CHAIN = [
+  "gemini-flash-latest",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-flash-lite-latest",
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
 ];
 
 async function withModelFallback<T>(run: (m: GenerativeModel) => Promise<T>): Promise<T> {

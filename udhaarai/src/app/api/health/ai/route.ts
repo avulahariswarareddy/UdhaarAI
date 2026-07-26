@@ -54,7 +54,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const m = new GoogleGenerativeAI(key).getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const m = new GoogleGenerativeAI(key).getGenerativeModel({ model: "gemini-flash-latest" });
     const r = await m.generateContent({
       contents: [{ role: "user", parts: [{ text: "Say OK" }] }],
       generationConfig: { maxOutputTokens: 5 },
