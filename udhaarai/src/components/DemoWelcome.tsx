@@ -3,13 +3,22 @@
 import { Guide } from "@/components/Guide";
 import { Sparkles, PlayCircle, ArrowRight } from "lucide-react";
 
+const SUGGESTIONS = [
+  "Who owes me the most?",
+  "Record ₹500 received from Ramesh via UPI",
+  "Show my Business Health Score",
+  "Show overdue customers",
+];
+
 /**
  * Full-screen welcome before the demo dashboard. The mascot waves, floating
  * motifs drift behind, and two clear choices: take the tour, or skip in.
+ * Shown once per browser tab session — see the sessionStorage gate in
+ * demo/page.tsx.
  */
 export function DemoWelcome({ onStart, onSkip }: { onStart: () => void; onSkip: () => void }) {
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden px-5"
+    <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden overflow-y-auto px-5 py-10"
       style={{ background: "radial-gradient(900px 600px at 50% 0%, rgba(245,158,11,0.12), transparent 60%), #0B1220" }}>
       {/* floating motifs */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -27,29 +36,42 @@ export function DemoWelcome({ onStart, onSkip }: { onStart: () => void; onSkip: 
 
       <div className="relative w-full max-w-lg text-center">
         <div className="mx-auto mb-6 w-fit drop-shadow-[0_0_30px_rgba(245,158,11,0.4)]">
-          <Guide pose="wave" size={140} />
+          <Guide pose="wave" size={130} />
         </div>
 
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/10 px-3 py-1.5 text-xs text-brand">
-          <Sparkles size={13} /> Interactive demo · sample shop
+          <Sparkles size={13} /> TKS Prompt to Product Challenge
         </div>
 
-        <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          Welcome to <span className="text-brand">UdhaarAI</span>
+        <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">
+          Welcome to <span className="text-brand">UdhaarAI</span>!
         </h1>
-        <p className="mx-auto mt-4 max-w-md text-white/60">
-          See how a handwritten notebook becomes a working digital ledger — scanned, checked,
-          and ready to collect — in a few clicks.
+        <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/65">
+          We&apos;ve already prepared a complete business so you can experience every feature
+          immediately — everything here works exactly like the real application, just with
+          realistic customers, transactions, expenses, scans and analytics already loaded.
+          Explore, experiment, even try to break things. This workspace was made for curious judges. 😄
         </p>
 
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <button onClick={onStart}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-brand px-7 py-3.5 font-semibold text-navy transition hover:bg-brand-light active:scale-95">
-            <PlayCircle size={18} /> Start the tour
-          </button>
+        <div className="mx-auto mt-5 max-w-md rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left">
+          <p className="mb-2 font-mono text-[10px] tracking-widest text-white/40">TRY ASKING THE AI</p>
+          <ul className="space-y-1.5 text-sm text-white/70">
+            {SUGGESTIONS.map((s) => (
+              <li key={s} className="flex items-center gap-2">
+                <span className="h-1 w-1 shrink-0 rounded-full bg-brand" /> &ldquo;{s}&rdquo;
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mt-7 flex flex-wrap justify-center gap-3">
           <button onClick={onSkip}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-brand px-7 py-3.5 font-semibold text-navy transition hover:bg-brand-light active:scale-95">
+            <ArrowRight size={18} /> Start exploring
+          </button>
+          <button onClick={onStart}
             className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/12 bg-white/5 px-7 py-3.5 font-semibold transition hover:bg-white/10">
-            Skip, let me explore <ArrowRight size={16} />
+            <PlayCircle size={16} /> Guided tour
           </button>
         </div>
       </div>

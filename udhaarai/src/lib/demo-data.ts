@@ -54,7 +54,56 @@ export const DEMO_CUSTOMERS: CustomerRow[] = [
     last_entry: ago(12), last_payment: ago(12),
     entry_count: 9, first_entry: ago(150),
   },
+  ...generateMoreCustomers(),
 ];
+
+/**
+ * The seven customers above are hand-tuned so the demo's screens (trend
+ * chart, ageing buckets, canned assistant answers) tell a specific story —
+ * they're referenced by name elsewhere in this file. This block fills the
+ * roster out to a realistic shop size (30+ names) without touching any of
+ * that: deterministic (no Math.random, so it's stable across renders and
+ * server/client), varied enough that Customers/Collections don't look like
+ * a seven-row toy.
+ */
+function generateMoreCustomers() {
+  const names = [
+    "Krishna Murthy", "Sita Rao", "Anand Verma", "Priya Sharma", "Rahul Iyer",
+    "Deepa Nair", "Vijay Kumar", "Meena Chandran", "Arjun Pillai", "Kavya Reddy",
+    "Sanjay Gowda", "Nithya Krishnan", "Ravi Shankar", "Divya Menon", "Manoj Patel",
+    "Swathi Prasad", "Kiran Babu", "Shalini Rao", "Ashok Verma", "Pooja Iyengar",
+    "Naveen Chowdary", "Radha Krishnan", "Sunil Achari", "Geetha Nagesh", "Prakash Rao",
+    "Vidya Balaji", "Harish Chandra", "Lalitha Devi", "Karthik Subramanian", "Anitha Reddy",
+    "Ramu Goud", "Sarala Devi", "Balaji Naicker", "Chandrika Rao", "Dinesh Kumar",
+  ];
+  const phoneBase = 9000000000;
+  return names.map((name, i) => {
+    // Deterministic pseudo-random in [0,1) from the index — stable output,
+    // no Math.random(). Same trick used for the splash's particle field.
+    const seed = (n: number) => {
+      const s = Math.sin(n * 12.9898) * 43758.5453;
+      return s - Math.floor(s);
+    };
+    const credit = Math.round((800 + seed(i) * 22000) / 50) * 50;
+    const repayRate = 0.25 + seed(i + 100) * 0.75; // how much of it they've paid back
+    const paid = Math.round((credit * repayRate) / 50) * 50;
+    const outstanding = Math.max(0, credit - paid);
+    const hasPhone = seed(i + 200) > 0.15;
+    const daysSinceEntry = Math.round(1 + seed(i + 300) * 200);
+    const daysSincePayment = paid > 0 ? Math.round(daysSinceEntry + seed(i + 400) * 150) : null;
+    const entryCount = Math.round(3 + seed(i + 500) * 40);
+    return {
+      id: `dg${i + 1}`,
+      name,
+      phone: hasPhone ? String(phoneBase + Math.round(seed(i + 600) * 99999999)) : null,
+      credit, paid, outstanding,
+      last_entry: ago(daysSinceEntry),
+      last_payment: daysSincePayment != null ? ago(daysSincePayment) : null,
+      entry_count: entryCount,
+      first_entry: ago(daysSinceEntry + entryCount * 12),
+    };
+  });
+}
 
 export type DemoTx = {
   id: string; customer: string; date: string;

@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { toast } from "sonner";
-import { Loader2, Mail, ArrowLeft, ArrowRight, Rocket } from "lucide-react";
+import { Loader2, Mail, ArrowLeft, ArrowRight, Trophy, Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Logo } from "@/components/Logo";
 
@@ -80,23 +81,6 @@ export function LoginForm() {
         <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm text-white/45 hover:text-white">
           <ArrowLeft size={15} /> Back
         </Link>
-
-        {step === "email" && (
-          <div className="mb-5 rounded-2xl border border-brand/25 bg-brand/[0.07] p-5">
-            <div className="flex items-center gap-2 font-mono text-[11px] tracking-widest text-brand">
-              <Rocket size={14} /> TKS PROMPT TO PRODUCT CHALLENGE
-            </div>
-            <p className="mt-2 text-sm text-white/80">
-              Judging UdhaarAI? Skip sign-in — explore a fully prepared demo shop with real customers, transactions and AI features already loaded.
-            </p>
-            <Link
-              href="/demo"
-              className="mt-3.5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 font-semibold text-navy transition hover:bg-brand-light active:scale-95"
-            >
-              Explore demo business <ArrowRight size={16} />
-            </Link>
-          </div>
-        )}
 
         <div className="glass rounded-3xl p-7 sm:p-9">
           <Logo />
@@ -187,6 +171,39 @@ export function LoginForm() {
             </div>
           )}
         </div>
+
+        {step === "email" && (
+          <div className="judge-glow relative mt-6 overflow-hidden rounded-3xl border border-brand/25 bg-gradient-to-br from-brand/[0.1] via-white/[0.03] to-transparent p-6 backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <div className="shrink-0 overflow-hidden rounded-2xl border border-brand/25 shadow-lg shadow-brand/20">
+                <Image src="/brand/tks-poster.png" alt="TKS Prompt to Product Challenge" width={56} height={56} className="h-14 w-14 object-cover" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5 font-mono text-[11px] tracking-widest text-brand">
+                  <Trophy size={13} /> TKS PROMPT TO PRODUCT CHALLENGE JUDGES
+                </div>
+                <h2 className="mt-1 font-display text-lg font-bold">Welcome!</h2>
+              </div>
+            </div>
+
+            <p className="mt-3.5 text-sm leading-relaxed text-white/75">
+              We&apos;ve prepared something special so you can explore UdhaarAI without spending time
+              creating an account. This is the real application — realistic customers, transactions,
+              expenses, AI insights, WhatsApp reminders, OCR history, dashboards and analytics, all
+              already set up. Try the AI, edit data, record payments, add customers — click every button.
+            </p>
+
+            <Link
+              href="/demo"
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3.5 font-semibold text-navy shadow-lg shadow-brand/25 transition hover:bg-brand-light hover:shadow-brand/40 active:scale-95"
+            >
+              <Rocket size={17} /> Enter Judge Workspace
+            </Link>
+            <p className="mt-2.5 text-center text-[11px] tracking-wide text-white/40">
+              One click · no email · no password · no OTP
+            </p>
+          </div>
+        )}
       </div>
     </main>
   );

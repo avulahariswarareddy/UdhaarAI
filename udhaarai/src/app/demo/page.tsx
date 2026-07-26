@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
   LayoutGrid, ScanLine, Target, Users, MessageSquare,
@@ -57,9 +57,30 @@ const TOUR: TourStep[] = [
     body: "\u201CWho hasn't paid in sixty days?\u201D \u201CHow much profit this month?\u201D I answer from your real ledger, never made up." },
 ];
 
+const WELCOME_SEEN_KEY = "udhaarai-demo-welcome-seen";
+
 export default function DemoPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const [phase, setPhase] = useState<"welcome" | "tour" | "explore">("welcome");
+
+  // The welcome screen is a one-time introduction, not something to
+  // re-show every time a judge navigates back to the demo mid-session.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(WELCOME_SEEN_KEY) === "1") setPhase("explore");
+    } catch {
+      // sessionStorage unavailable — just show the welcome screen as normal.
+    }
+  }, []);
+
+  function leaveWelcome(next: "tour" | "explore") {
+    try {
+      sessionStorage.setItem(WELCOME_SEEN_KEY, "1");
+    } catch {
+      // Ignore — worst case the welcome screen reappears next visit.
+    }
+    setPhase(next);
+  }
 
   const outstanding = DEMO_CUSTOMERS.reduce((s, c) => s + c.outstanding, 0);
   const collected = DEMO_CUSTOMERS.reduce((s, c) => s + c.paid, 0);
@@ -70,7 +91,7 @@ export default function DemoPage() {
   return (
     <div className="min-h-screen">
       {phase === "welcome" && (
-        <DemoWelcome onStart={() => setPhase("tour")} onSkip={() => setPhase("explore")} />
+        <DemoWelcome onStart={() => leaveWelcome("tour")} onSkip={() => leaveWelcome("explore")} />
       )}
       {phase === "tour" && (
         <GuidedTour steps={TOUR} onGoToTab={(x) => setTab(x as Tab)} onExit={() => setPhase("explore")} />
@@ -222,7 +243,9 @@ export default function DemoPage() {
         {tab === "customers" && (
           <>
             <h1 className="font-display text-3xl font-extrabold tracking-tight">Customers</h1>
-            <p className="mt-1 text-sm text-white/50">7 in the ledger · 6 with a balance</p>
+            <p className="mt-1 text-sm text-white/50">
+              {DEMO_CUSTOMERS.length} in the ledger · {DEMO_CUSTOMERS.filter((c) => c.outstanding > 0).length} with a balance
+            </p>
             <ul className="mt-5 space-y-3">
               {DEMO_CUSTOMERS.map((c) => {
                 const r = assessRisk(c);
