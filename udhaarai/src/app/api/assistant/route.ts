@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient, getUser } from "@/lib/supabase/server";
-import { answerAboutLedger } from "@/lib/gemini";
+import { answerAboutLedger, isGeminiQuotaError } from "@/lib/gemini";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -64,7 +64,11 @@ export async function POST(request: Request) {
   } catch (e) {
     console.error("[assistant]", e);
     return NextResponse.json(
-      { error: "The assistant is unavailable right now. Try again shortly." },
+      {
+        error: isGeminiQuotaError(e)
+          ? "The AI is at its usage limit for right now. Try again in a minute."
+          : "The assistant is unavailable right now. Try again shortly.",
+      },
       { status: 502 }
     );
   }

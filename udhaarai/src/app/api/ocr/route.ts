@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, getUser } from "@/lib/supabase/server";
-import { extractLedger } from "@/lib/gemini";
+import { extractLedger, isGeminiQuotaError } from "@/lib/gemini";
 import { rateLimit } from "@/lib/rate-limit";
 import { checkOrigin, sniffImageType, fail } from "@/lib/security";
 
@@ -95,7 +95,9 @@ export async function POST(request: Request) {
     await supabase.from("uploads")
       .update({ status: "failed", error_message: "extraction failed" })
       .eq("id", upload.id);
-    const msg = e instanceof Error ? e.message : "The reader is unavailable right now.";
+    const msg = isGeminiQuotaError(e)
+      ? "The AI is at its usage limit for right now. Try again in a minute."
+      : e instanceof Error ? e.message : "The reader is unavailable right now.";
     return fail(msg, 502, e);
   }
 }

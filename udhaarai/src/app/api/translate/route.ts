@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUser } from "@/lib/supabase/server";
-import { translateLine } from "@/lib/gemini";
+import { translateLine, isGeminiQuotaError } from "@/lib/gemini";
 import { checkOrigin, fail } from "@/lib/security";
 import { rateLimit, clientKey } from "@/lib/rate-limit";
 
@@ -30,6 +30,11 @@ export async function POST(request: Request) {
     const translated = await translateLine(parsed.data.text, parsed.data.target);
     return NextResponse.json({ text: translated });
   } catch (e) {
-    return fail("Could not translate that right now.", 502, e);
+    return fail(
+      isGeminiQuotaError(e)
+        ? "The AI is at its usage limit for right now. Try again in a minute."
+        : "Could not translate that right now.",
+      502, e
+    );
   }
 }

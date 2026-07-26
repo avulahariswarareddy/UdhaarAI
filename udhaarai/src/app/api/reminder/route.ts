@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient, getUser } from "@/lib/supabase/server";
-import { writeReminderVariants } from "@/lib/gemini";
+import { writeReminderVariants, isGeminiQuotaError } from "@/lib/gemini";
 import { rateLimit } from "@/lib/rate-limit";
 import { checkOrigin, fail } from "@/lib/security";
 import { nextFestival } from "@/lib/verify/insights";
@@ -131,8 +131,11 @@ export async function POST(request: Request) {
       },
     });
   } catch (e) {
-    // TEMPORARY DEBUG — surfacing the real error to diagnose a live 502.
-    // Reverted before this ships for real; do not leave this in.
-    return fail(`DEBUG: ${e instanceof Error ? e.message : String(e)}`, 502, e);
+    return fail(
+      isGeminiQuotaError(e)
+        ? "The AI is at its usage limit for right now. Try again in a minute."
+        : "Could not write that reminder. Try again.",
+      502, e
+    );
   }
 }

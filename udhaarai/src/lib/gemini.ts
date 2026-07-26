@@ -15,6 +15,20 @@ function model(name = "gemini-2.5-flash") {
   return genAI.getGenerativeModel({ model: name });
 }
 
+/**
+ * True when a caught error is Gemini refusing the request over quota/rate
+ * limits (a 429), as opposed to a genuine failure. Every route that calls
+ * this file should check this before choosing what to tell the user —
+ * "try again in a minute" is a very different message from "something's
+ * broken", and the raw SDK error text should never reach the client either
+ * way (it's a verbose multi-paragraph blob with links, not something to
+ * show a shopkeeper).
+ */
+export function isGeminiQuotaError(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e);
+  return /429|quota|rate.?limit/i.test(msg);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Structured output schema — forces valid JSON back from Gemini      */
 /* ------------------------------------------------------------------ */
