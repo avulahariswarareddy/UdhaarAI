@@ -158,6 +158,24 @@ export async function extractLedger(
 /* ------------------------------------------------------------------ */
 export type ReminderVariant = { label: string; body: string };
 
+const REMINDER_SCHEMA = {
+  type: SchemaType.OBJECT,
+  properties: {
+    variants: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          label: { type: SchemaType.STRING },
+          body: { type: SchemaType.STRING },
+        },
+        required: ["label", "body"],
+      },
+    },
+  },
+  required: ["variants"],
+} as const;
+
 /**
  * Write three personalised reminders for ONE customer.
  *
@@ -219,7 +237,12 @@ Return ONLY raw JSON, no markdown fence:
 {"variants":[{"label":"warm","body":"..."},{"label":"standard","body":"..."},{"label":"brief","body":"..."}]}`,
       }],
     }],
-    generationConfig: { temperature: 0.85, maxOutputTokens: 900 },
+    generationConfig: {
+      temperature: 0.85,
+      maxOutputTokens: 1200,
+      responseMimeType: "application/json",
+      responseSchema: REMINDER_SCHEMA as never,
+    },
   });
 
   const salvaged = salvageJson<{ variants: ReminderVariant[] }>(result.response.text());
