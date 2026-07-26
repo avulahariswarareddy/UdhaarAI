@@ -131,6 +131,8 @@ export async function POST(request: Request) {
       },
     });
   } catch (e) {
-    return fail("Could not write that reminder. Try again.", 502, e);
+    // TEMPORARY DEBUG — surfacing the real error to diagnose a live 502.
+    // Reverted before this ships for real; do not leave this in.
+    return fail(`DEBUG: ${e instanceof Error ? e.message : String(e)}`, 502, e);
   }
 }
