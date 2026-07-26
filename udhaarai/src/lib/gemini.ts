@@ -1,18 +1,46 @@
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType, type GenerativeModel } from "@google/generative-ai";
 import { serverEnv } from "@/lib/env";
 import { salvageJson } from "@/lib/verify/model-output";
 
 /**
  * SERVER ONLY. The Gemini key never reaches the browser — every call in
  * this file runs inside a Next.js route handler.
- *
- * Model choice: gemini-2.5-flash handles multilingual handwriting well.
- * Keep generation deterministic (temperature 0) so the same page reads
- * the same way twice.
  */
-function model(name = "gemini-2.5-flash") {
+function model(name: string) {
   const genAI = new GoogleGenerativeAI(serverEnv().geminiKey);
   return genAI.getGenerativeModel({ model: name });
+}
+
+/**
+ * Free-tier quota is tracked PER MODEL per day — draining
+ * gemini-2.5-flash's daily bucket says nothing about its siblings'. Every
+ * call walks this chain and moves to the next model only on a quota
+ * rejection (or an unknown-model 404), so one empty bucket degrades output
+ * quality instead of killing the feature. Ordered by quality:
+ * 2.5-flash reads multilingual handwriting best; the lite and 2.0 models
+ * are competent fallbacks.
+ */
+const MODEL_CHAIN = [
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+];
+
+async function withModelFallback<T>(run: (m: GenerativeModel) => Promise<T>): Promise<T> {
+  let lastErr: unknown = null;
+  for (const name of MODEL_CHAIN) {
+    try {
+      return await run(model(name));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const recoverable = isGeminiQuotaError(e) || /404|not.?found|is not supported/i.test(msg);
+      if (!recoverable) throw e;
+      console.warn(`[gemini] ${name} unavailable — trying next model:`, msg.slice(0, 120));
+      lastErr = e;
+    }
+  }
+  throw lastErr;
 }
 
 /**
@@ -110,8 +138,7 @@ export async function extractLedger(
   base64: string,
   mimeType: string
 ): Promise<ExtractionResult> {
-  const m = model();
-  const result = await m.generateContent({
+  const result = await withModelFallback((m) => m.generateContent({
     contents: [
       {
         role: "user",
@@ -127,7 +154,7 @@ export async function extractLedger(
       responseSchema: LEDGER_SCHEMA as never,
       maxOutputTokens: 4096,
     },
-  });
+  }));
 
   const text = result.response.text();
 
@@ -220,8 +247,7 @@ export async function writeReminderVariants(opts: {
     festival: "Open with festival good wishes, then mention the balance gently at the end.",
   };
 
-  const m = model();
-  const result = await m.generateContent({
+  const result = await withModelFallback((m) => m.generateContent({
     contents: [{
       role: "user",
       parts: [{
@@ -257,7 +283,7 @@ Return ONLY raw JSON, no markdown fence:
       responseMimeType: "application/json",
       responseSchema: REMINDER_SCHEMA as never,
     },
-  });
+  }));
 
   const salvaged = salvageJson<{ variants: ReminderVariant[] }>(result.response.text());
   if (!salvaged.ok || !Array.isArray(salvaged.value?.variants)) {
@@ -272,8 +298,7 @@ Return ONLY raw JSON, no markdown fence:
 /*  Ask-your-ledger assistant                                          */
 /* ------------------------------------------------------------------ */
 export async function answerAboutLedger(question: string, ledgerJson: string) {
-  const m = model();
-  const result = await m.generateContent(
+  const result = await withModelFallback((m) => m.generateContent(
     `You are the assistant inside UdhaarAI, an app that digitizes a kirana shop's handwritten credit notebook.
 
 Here is the shop's ledger data as JSON. This is the ONLY data you may use:
@@ -287,7 +312,7 @@ Rules:
 - Be brief: two or three sentences, or a short list. No preamble.
 - Never invent a customer, an amount, or a date.
 - If asked to do something that is not a question about this ledger, say that is outside what you can help with here.`
-  );
+  ));
   return result.response.text().trim();
 }
 
@@ -297,11 +322,10 @@ Rules:
 /* ------------------------------------------------------------------ */
 export async function translateLine(text: string, target: "hi" | "te"): Promise<string> {
   const langName = target === "hi" ? "Hindi (Devanagari script)" : "Telugu script";
-  const m = model();
-  const result = await m.generateContent(
+  const result = await withModelFallback((m) => m.generateContent(
     `Translate this short message from an Indian shopkeeping app into ${langName}. Keep it natural and simple, the way a shopkeeper speaks. Keep rupee amounts and names as they are. Return ONLY the translation, nothing else.
 
 Message: ${text}`
-  );
+  ));
   return result.response.text().trim();
 }
