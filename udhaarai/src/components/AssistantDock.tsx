@@ -55,6 +55,9 @@ export function AssistantDock({
   }, []);
 
   useEffect(() => {
+    // Scrolls only the panel's own message list, and only once there is
+    // a conversation to follow — never the page.
+    if (!turns.length && !busy) return;
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [turns, busy]);
 

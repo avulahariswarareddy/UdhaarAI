@@ -87,8 +87,15 @@ body::before {
 /*  highlight, and a hairline edge. The saturation is what stops it    */
 /*  reading as flat grey frosting.                                     */
 /* ------------------------------------------------------------------ */
+/* The default position lives in a zero-specificity :where() so a Tailwind
+   position utility (fixed/absolute/sticky) on the same element always wins.
+   This rule sits after @tailwind utilities, so a plain `.liquid { position:
+   relative }` overrode the chat dock's `fixed` and dropped the panel into
+   the page flow at the document's end — the "chat opens at the bottom of
+   the page, on the left" bug. Elements using .liquid without a position
+   utility still get relative, which .liquid::before needs. */
+:where(.liquid) { position: relative; }
 .liquid {
-  position: relative;
   background: linear-gradient(
     150deg,
     rgba(255, 255, 255, 0.09),
