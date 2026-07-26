@@ -23,6 +23,7 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  const [judgeBusy, setJudgeBusy] = useState(false);
 
   const supabase = createClient();
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
@@ -46,7 +47,7 @@ export function LoginForm() {
   }
 
   async function verifyCode() {
-    if (code.trim().length < 6) return toast.error("Enter the six-digit code.");
+    if (!code.trim()) return toast.error("Enter the verification code.");
     setBusy(true);
     const res = await fetch("/api/auth/verify", {
       method: "POST",
@@ -75,6 +76,21 @@ export function LoginForm() {
     }
   }
 
+  async function enterJudgeWorkspace() {
+    setJudgeBusy(true);
+    try {
+      const res = await fetch("/api/auth/judge", { method: "POST" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? "Could not open the judge workspace.");
+      toast.success(json.created ? "Workspace ready — welcome!" : "Welcome back!");
+      router.push("/dashboard");
+      router.refresh();
+    } catch (e) {
+      setJudgeBusy(false);
+      toast.error(e instanceof Error ? e.message : "Something went wrong.");
+    }
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center px-5 py-10">
       <div className="w-full max-w-md">
@@ -86,11 +102,11 @@ export function LoginForm() {
           <Logo />
 
           <h1 className="mt-7 font-display text-2xl font-extrabold tracking-tight">
-            {step === "email" ? "Open your ledger" : "Enter the code"}
+            {step === "email" ? "Open your ledger" : "Enter the verification code"}
           </h1>
           <p className="mt-2 text-sm text-white/50">
             {step === "email"
-              ? "We'll email you a six-digit code. No password to remember."
+              ? "We'll email you a verification code. No password to remember."
               : `Sent to ${email}. It expires in a few minutes.`}
           </p>
 
@@ -134,12 +150,16 @@ export function LoginForm() {
               >
                 Continue with Google
               </button>
+
+              <p className="text-center text-xs text-white/35">
+                Didn&apos;t receive your verification code? Please check your Spam or Junk folder.
+              </p>
             </div>
           ) : (
             <div className="mt-7 space-y-4">
               <div>
                 <label htmlFor="code" className="mb-2 block font-mono text-[11px] tracking-widest text-white/45">
-                  SIX-DIGIT CODE
+                  VERIFICATION CODE
                 </label>
                 <input
                   id="code"
@@ -193,12 +213,14 @@ export function LoginForm() {
               already set up. Try the AI, edit data, record payments, add customers — click every button.
             </p>
 
-            <Link
-              href="/demo"
-              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3.5 font-semibold text-navy shadow-lg shadow-brand/25 transition hover:bg-brand-light hover:shadow-brand/40 active:scale-95"
+            <button
+              onClick={enterJudgeWorkspace}
+              disabled={judgeBusy}
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3.5 font-semibold text-navy shadow-lg shadow-brand/25 transition hover:bg-brand-light hover:shadow-brand/40 active:scale-95 disabled:opacity-60"
             >
-              <Rocket size={17} /> Enter Judge Workspace
-            </Link>
+              {judgeBusy ? <Loader2 size={17} className="animate-spin" /> : <Rocket size={17} />}
+              Enter Judge Workspace
+            </button>
             <p className="mt-2.5 text-center text-[11px] tracking-wide text-white/40">
               One click · no email · no password · no OTP
             </p>

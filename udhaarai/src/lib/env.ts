@@ -23,3 +23,16 @@ export function serverEnv() {
     geminiKey: required("GEMINI_API_KEY", process.env.GEMINI_API_KEY),
   };
 }
+
+/**
+ * Server-only. Only read where actually needed (the judge auto-login route)
+ * so a misconfigured deployment doesn't fail to boot over a feature most
+ * requests never touch.
+ */
+export function judgeEnv() {
+  return {
+    serviceRoleKey: required("SUPABASE_SERVICE_ROLE_KEY", process.env.SUPABASE_SERVICE_ROLE_KEY),
+    email: required("JUDGE_ACCOUNT_EMAIL", process.env.JUDGE_ACCOUNT_EMAIL),
+    password: required("JUDGE_ACCOUNT_PASSWORD", process.env.JUDGE_ACCOUNT_PASSWORD),
+  };
+}
