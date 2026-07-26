@@ -26,7 +26,7 @@ type Slots = {
 type Proposal = {
   intent: { kind: string; lang: string; confidence: number; slots: Slots; missing: string[] };
   summary: string;
-  customerMatches: { id: string; name: string; score: number }[];
+  customerMatches: { id: string; name: string; score: number; outstanding?: number }[];
   requiresConfirmation: boolean;
   fallbackToAssistant: boolean;
 };
@@ -191,6 +191,17 @@ export function ActionNote() {
               {proposal.customerMatches.length > 0 && proposal.intent.kind === "record_payment" && (
                 <p className="mt-2 text-[12px] text-white/55">
                   Matching your existing customer <span className="text-white">{proposal.customerMatches[0].name}</span>.
+                </p>
+              )}
+
+              {/* overpayment — never silently accepted, always explained */}
+              {proposal.intent.kind === "record_payment" &&
+                proposal.customerMatches[0]?.outstanding !== undefined &&
+                proposal.customerMatches[0].outstanding > 0 &&
+                Number(amount) > proposal.customerMatches[0].outstanding && (
+                <p className="mt-2 text-[12px] text-brand">
+                  {proposal.customerMatches[0].name} only owes ₹{proposal.customerMatches[0].outstanding.toLocaleString("en-IN")} —
+                  the rest will be logged as an advance credit.
                 </p>
               )}
 

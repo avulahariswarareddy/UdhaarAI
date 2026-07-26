@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   // For actions that name a customer, try to resolve them against the roster
   // so the confirmation can say "did you mean this Ramesh?" rather than
   // blindly creating a duplicate.
-  let customerMatches: { id: string; name: string; score: number }[] = [];
+  let customerMatches: { id: string; name: string; score: number; outstanding?: number }[] = [];
   if (intent.slots.customerName &&
       (intent.kind === "record_payment" || intent.kind === "find_customer" || intent.kind === "generate_reminder")) {
     const { data: customers } = await supabase
@@ -51,6 +51,15 @@ export async function POST(request: Request) {
         .filter((m) => m.score >= ASK_ADMIN)
         .slice(0, 3);
     }
+  }
+
+  // A payment amount that exceeds the outstanding balance needs a heads-up
+  // before confirmation, not a silent overpayment — same rule QuickPayment
+  // applies. Only worth the query for the one match the confirmation acts on.
+  if (intent.kind === "record_payment" && customerMatches[0]) {
+    const { data: txs } = await supabase
+      .from("transactions").select("credit, payment").eq("customer_id", customerMatches[0].id);
+    customerMatches[0].outstanding = (txs ?? []).reduce((s, t) => s + Number(t.credit) - Number(t.payment), 0);
   }
 
   // If the parser is unsure, defer to the LLM-backed assistant rather than
