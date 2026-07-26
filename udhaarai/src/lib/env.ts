@@ -27,11 +27,11 @@ export function serverEnv() {
 /**
  * Server-only. Only read where actually needed (the judge auto-login route)
  * so a misconfigured deployment doesn't fail to boot over a feature most
- * requests never touch.
+ * requests never touch. The service-role key is validated separately, in
+ * createAdminClient, which is also used outside the judge flow.
  */
 export function judgeEnv() {
   return {
-    serviceRoleKey: required("SUPABASE_SERVICE_ROLE_KEY", process.env.SUPABASE_SERVICE_ROLE_KEY),
     email: required("JUDGE_ACCOUNT_EMAIL", process.env.JUDGE_ACCOUNT_EMAIL),
     password: required("JUDGE_ACCOUNT_PASSWORD", process.env.JUDGE_ACCOUNT_PASSWORD),
   };

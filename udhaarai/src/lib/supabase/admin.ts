@@ -1,5 +1,5 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { env, judgeEnv } from "@/lib/env";
+import { env } from "@/lib/env";
 
 /**
  * Service-role client. Bypasses Row Level Security entirely — every call
@@ -8,13 +8,17 @@ import { env, judgeEnv } from "@/lib/env";
  * browser; it isn't marked "use client" because nothing here does, but the
  * key itself must never leave the server process.
  *
- * Used only by the judge auto-login route: creating/looking up the shared
- * judge account and seeding its workspace, both of which need to act
- * outside any one user's session.
+ * Used by the judge auto-login route (creating/seeding the shared judge
+ * account) and by routes that must write to server-only tables — the
+ * audit_logs policy deliberately blocks inserts from user sessions, so
+ * audit rows are written through this client.
  */
 export function createAdminClient() {
-  const { serviceRoleKey } = judgeEnv();
-  return createSupabaseClient(env.supabaseUrl, serviceRoleKey, {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key || key.trim() === "") {
+    throw new Error("Missing environment variable SUPABASE_SERVICE_ROLE_KEY.");
+  }
+  return createSupabaseClient(env.supabaseUrl, key, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }
