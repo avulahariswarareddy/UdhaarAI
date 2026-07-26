@@ -9,14 +9,14 @@ export const runtime = "nodejs";
 /**
  * Code verification, rate limited.
  *
- * A six-digit code is a million possibilities, which sounds like a lot until
+ * An eight-digit code is a hundred million possibilities, which sounds like a lot until
  * you can try it a thousand times a second. Ten attempts per fifteen minutes
  * per address makes guessing hopeless while staying invisible to anyone
  * typing their own code correctly, or fumbling it once or twice.
  */
 const Body = z.object({
   email: z.string().email().max(254),
-  token: z.string().regex(/^\d{6}$/),
+  token: z.string().regex(/^\d{8}$/),
 });
 
 export async function POST(request: Request) {
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Enter the six-digit code." }, { status: 400 });
+    return NextResponse.json({ error: "Enter the eight-digit code." }, { status: 400 });
   }
   const email = parsed.data.email.trim().toLowerCase();
 

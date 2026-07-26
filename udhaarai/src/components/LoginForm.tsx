@@ -164,18 +164,18 @@ export function LoginForm() {
                 <input
                   id="code"
                   inputMode="numeric"
-                  maxLength={6}
+                  maxLength={8}
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
                   onKeyDown={(e) => e.key === "Enter" && verifyCode()}
-                  placeholder="000000"
+                  placeholder="00000000"
                   className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center font-mono text-2xl tracking-[0.4em] outline-none focus:border-brand/60"
                 />
               </div>
 
               <button
                 onClick={verifyCode}
-                disabled={busy || code.length < 6}
+                disabled={busy || code.length < 8}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3.5 font-semibold text-navy transition hover:bg-brand-light active:scale-95 disabled:opacity-40"
               >
                 {busy ? <Loader2 size={17} className="animate-spin" /> : <ArrowRight size={17} />}
