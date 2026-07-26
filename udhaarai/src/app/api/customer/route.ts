@@ -10,7 +10,10 @@ export const runtime = "nodejs";
 const Body = z.object({
   name: z.string().min(1).max(120),
   phone: z.string().max(20).optional().default(""),
+  address: z.string().max(300).optional().default(""),
+  language: z.enum(["en", "hi", "te"]).optional().default("en"),
   notes: z.string().max(300).optional().default(""),
+  creditLimit: z.number().min(0).max(10_000_000).nullable().optional().default(null),
 });
 
 /** Manually add a customer (also the executor for the Action Note "add customer"). */
@@ -37,7 +40,13 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from("customers")
     .upsert(
-      { owner_id: user.id, name, phone, notes: sanitizeText(parsed.data.notes, 300) || null },
+      {
+        owner_id: user.id, name, phone,
+        address: sanitizeText(parsed.data.address, 300) || null,
+        language: parsed.data.language,
+        notes: sanitizeText(parsed.data.notes, 300) || null,
+        credit_limit: parsed.data.creditLimit,
+      },
       { onConflict: "owner_id,name", ignoreDuplicates: false }
     )
     .select("id, name")

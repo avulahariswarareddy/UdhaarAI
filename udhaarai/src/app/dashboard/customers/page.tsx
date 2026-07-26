@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { rupee, timeAgo } from "@/lib/utils";
 import { Users, Phone, ArrowRight, Camera } from "lucide-react";
+import { AddCustomerButton } from "@/components/AddCustomerButton";
 
 export const dynamic = "force-dynamic";
 
@@ -36,12 +37,15 @@ export default async function CustomersPage({
             {all.length} in the ledger · {all.filter((c) => c.outstanding > 0).length} with a balance
           </p>
         </div>
-        <Link
-          href="/dashboard/upload"
-          className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-navy transition hover:bg-brand-light"
-        >
-          <Camera size={15} /> Add page
-        </Link>
+        <div className="flex gap-2">
+          <AddCustomerButton />
+          <Link
+            href="/dashboard/upload"
+            className="inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-navy transition hover:bg-brand-light"
+          >
+            <Camera size={15} /> Add page
+          </Link>
+        </div>
       </div>
 
       <form className="glass mb-5 flex items-center gap-2 rounded-xl px-4 py-2.5">

@@ -5,7 +5,8 @@ import { rupee } from "@/lib/utils";
 import { ReminderBox } from "@/components/ReminderBox";
 import { QuickPayment } from "@/components/QuickPayment";
 import { ReceiptButton } from "@/components/ReceiptButton";
-import { ArrowLeft, Phone } from "lucide-react";
+import { CustomerActions } from "@/components/CustomerActions";
+import { ArrowLeft, Phone, MapPin } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function CustomerPage({
   // RLS scopes this to the signed-in shopkeeper. A guessed id returns nothing.
   const { data: customer } = await supabase
     .from("customers")
-    .select("id, name, phone, notes")
+    .select("id, name, phone, address, language, notes, credit_limit")
     .eq("id", id)
     .maybeSingle();
   if (!customer) notFound();
@@ -28,6 +29,12 @@ export default async function CustomerPage({
     .select("id, entry_date, raw_date_text, items, credit, payment, notes, created_at")
     .eq("customer_id", id)
     .order("created_at", { ascending: false });
+
+  const { data: others } = await supabase
+    .from("customers")
+    .select("id, name")
+    .neq("id", id)
+    .order("name");
 
   const rows = txs ?? [];
   const credit = rows.reduce((s, t) => s + Number(t.credit), 0);
@@ -60,6 +67,14 @@ export default async function CustomerPage({
                   "No phone number on the pages so far"
                 )}
               </p>
+              {customer.address && (
+                <p className="mt-1 flex items-center gap-1.5 text-sm text-white/45">
+                  <MapPin size={13} /> {customer.address}
+                </p>
+              )}
+              {customer.credit_limit != null && (
+                <p className="mt-1 text-xs text-white/40">Credit limit: {rupee(customer.credit_limit)}</p>
+              )}
             </div>
           </div>
 
@@ -75,6 +90,19 @@ export default async function CustomerPage({
               {rupee(credit)} given · {rupee(paid)} collected
             </div>
           </div>
+        </div>
+
+        <div className="mt-5 border-t border-white/8 pt-5">
+          <CustomerActions
+            customer={{
+              id: customer.id, name: customer.name, phone: customer.phone,
+              address: customer.address, language: (customer.language ?? "en") as "en" | "hi" | "te",
+              notes: customer.notes, creditLimit: customer.credit_limit,
+            }}
+            outstanding={outstanding}
+            entryCount={rows.length}
+            otherCustomers={others ?? []}
+          />
         </div>
       </div>
 
