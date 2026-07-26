@@ -34,10 +34,9 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    const msg = /not found/i.test(error.message) ? "That customer wasn't found."
-      : /zero|wrong/i.test(error.message) ? error.message
-      : "Could not record that payment.";
-    return fail(msg, 400, error);
+    // TEMPORARY DEBUG — surfacing the raw error to diagnose a live failure.
+    // Reverted before this ships for real; do not leave this in.
+    return fail(`DEBUG: ${error.message} | code=${error.code} | details=${error.details} | hint=${error.hint}`, 400, error);
   }
 
   return NextResponse.json({ ok: true, transactionId: data });
