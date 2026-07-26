@@ -27,7 +27,29 @@ export async function GET(request: Request) {
     deployedAt: process.env.VERCEL_DEPLOYMENT_ID ?? null,
   };
 
-  if (new URL(request.url).searchParams.get("probe") !== "1") {
+  const params = new URL(request.url).searchParams;
+
+  // ?models=1 — ask Google which models THIS key may call, so the model
+  // chain can be updated from facts instead of guessed names.
+  if (params.get("models") === "1") {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?pageSize=100&key=${encodeURIComponent(key)}`
+      );
+      const json = (await res.json()) as {
+        models?: { name: string; supportedGenerationMethods?: string[] }[];
+        error?: { message?: string };
+      };
+      const usable = (json.models ?? [])
+        .filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
+        .map((m) => m.name.replace("models/", ""));
+      return NextResponse.json({ ...base, ok: res.ok, models: usable, error: json.error?.message ?? null });
+    } catch (e) {
+      return NextResponse.json({ ...base, ok: false, error: String(e).slice(0, 300) });
+    }
+  }
+
+  if (params.get("probe") !== "1") {
     return NextResponse.json(base);
   }
 
