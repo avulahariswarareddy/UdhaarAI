@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Sparkles, Mic, Send, Loader2, Check, Pencil, X, Wand2 } from "lucide-react";
+import { Sparkles, Send, Loader2, Check, Pencil, X, Wand2 } from "lucide-react";
 import { Guide } from "@/components/Guide";
 import { TranslatableLine } from "@/components/TranslatableLine";
 import { PAYMENT_METHODS } from "@/lib/verify/analytics";
@@ -11,10 +11,9 @@ import { PAYMENT_METHODS } from "@/lib/verify/analytics";
 /**
  * AI Action Note — the signature feature.
  *
- * The shopkeeper types or speaks what they want ("Ramesh paid 500"). The
- * server parses the intent; this component shows what it understood and asks
- * for confirmation before anything that moves money. Voice uses the browser's
- * built-in SpeechRecognition where available, in the chosen language.
+ * The shopkeeper types what they want ("Ramesh paid 500"). The server parses
+ * the intent; this component shows what it understood and asks for
+ * confirmation before anything that moves money.
  *
  * Nothing here trusts the parse blindly: every money action is confirmed, and
  * the confirmation question itself can be translated to Hindi or Telugu.
@@ -32,22 +31,12 @@ type Proposal = {
   fallbackToAssistant: boolean;
 };
 
-// Minimal typing for the vendor-prefixed speech API.
-type SpeechRec = {
-  lang: string; continuous: boolean; interimResults: boolean;
-  onresult: ((e: { results: { 0: { 0: { transcript: string } } } }) => void) | null;
-  onerror: (() => void) | null; onend: (() => void) | null;
-  start: () => void; stop: () => void;
-};
-
 export function ActionNote() {
   const router = useRouter();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [editing, setEditing] = useState(false);
-  const [listening, setListening] = useState(false);
-  const recRef = useRef<SpeechRec | null>(null);
 
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("Cash");
@@ -56,26 +45,6 @@ export function ActionNote() {
     if (proposal?.intent.slots.amount) setAmount(String(proposal.intent.slots.amount));
     if (proposal?.intent.slots.method) setMethod(proposal.intent.slots.method);
   }, [proposal]);
-
-  /* -------- voice -------- */
-  function toggleVoice() {
-    const W = window as unknown as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec };
-    const Ctor = W.SpeechRecognition ?? W.webkitSpeechRecognition;
-    if (!Ctor) return toast.error("Voice input isn't supported in this browser. Please type instead.");
-
-    if (listening) { recRef.current?.stop(); return; }
-
-    const rec = new Ctor();
-    rec.lang = "en-IN"; // recognises Indian-accented English, Hindi and Telugu words mixed in
-    rec.continuous = false;
-    rec.interimResults = false;
-    rec.onresult = (e) => setText(e.results[0][0].transcript);
-    rec.onerror = () => { setListening(false); toast.error("Didn't catch that. Try again or type it."); };
-    rec.onend = () => setListening(false);
-    recRef.current = rec;
-    setListening(true);
-    rec.start();
-  }
 
   /* -------- parse -------- */
   async function interpret() {
@@ -192,22 +161,11 @@ export function ActionNote() {
           placeholder='e.g. "Ramesh paid 500 via UPI" or "electricity bill 2300"'
           className="w-full bg-transparent py-3 text-sm outline-none placeholder:text-white/30"
         />
-        <button onClick={toggleVoice} aria-label="Speak"
-          className={`shrink-0 cursor-pointer rounded-lg p-1.5 transition ${
-            listening ? "bg-brand text-navy" : "text-white/40 hover:bg-white/10 hover:text-white"}`}>
-          <Mic size={15} />
-        </button>
         <button onClick={interpret} disabled={busy || !text.trim()} aria-label="Interpret"
           className="shrink-0 cursor-pointer rounded-lg bg-brand p-2 text-navy transition hover:bg-brand-light disabled:opacity-40">
           {busy ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
         </button>
       </div>
-
-      {listening && (
-        <p className="mt-2 flex items-center gap-2 text-xs text-brand">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-brand" /> Listening… say it naturally
-        </p>
-      )}
 
       {/* the confirmation card */}
       {proposal && proposal.intent.kind !== "unknown" && (

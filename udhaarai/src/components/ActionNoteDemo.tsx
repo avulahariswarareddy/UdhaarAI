@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Wand2, Sparkles, Mic, Send, Check, Pencil, X } from "lucide-react";
+import { Wand2, Sparkles, Send, Check, Pencil, X } from "lucide-react";
 import { Guide } from "@/components/Guide";
 import { parseIntent, describeIntent } from "@/lib/verify/intent";
 
@@ -56,7 +56,7 @@ export function ActionNoteDemo() {
         <Wand2 size={17} className="text-brand" />
         <h2 className="font-display text-lg font-bold">Note</h2>
         <span className="rounded-full bg-brand/12 px-2 py-0.5 text-[10px] font-medium text-brand">
-          type it or say it — I understand
+          just say what you want
         </span>
       </div>
 
@@ -65,7 +65,6 @@ export function ActionNoteDemo() {
         <input value={text} onChange={(e) => setText(e.target.value)}
           placeholder='e.g. "Ramesh paid 500 via UPI"'
           className="w-full bg-transparent py-3 text-sm outline-none placeholder:text-white/30" />
-        <Mic size={15} className="shrink-0 text-white/30" />
         <button aria-label="Interpret" className="shrink-0 cursor-pointer rounded-lg bg-brand p-2 text-navy">
           <Send size={15} />
         </button>
