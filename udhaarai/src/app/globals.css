@@ -10,6 +10,12 @@
 
 html { -webkit-text-size-adjust: 100%; }
 
+/* A blocking inline script in <head> (see layout.tsx) adds this class
+   before first paint when sessionStorage says the splash already played —
+   without it, a reload would show the overlay for a frame before React's
+   own effect could hide it. */
+html.splash-skip #splash-overlay { display: none !important; }
+
 body {
   background:
     radial-gradient(1100px 620px at 82% -12%, rgba(245, 158, 11, 0.16), transparent 60%),

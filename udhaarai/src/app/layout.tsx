@@ -1,7 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
-import SplashScreen from "@/components/SplashScreen";
+import SplashScreen, { SPLASH_SESSION_KEY } from "@/components/SplashScreen";
 import "./globals.css";
+
+// Runs synchronously before <body> paints, so a reload within a session
+// that already saw the splash never shows it for even one frame — see the
+// html.splash-skip rule in globals.css.
+const SPLASH_SKIP_SCRIPT = `(function(){try{if(sessionStorage.getItem(${JSON.stringify(SPLASH_SESSION_KEY)})==="1"){document.documentElement.classList.add("splash-skip");}}catch(e){}})();`;
 
 const DESCRIPTION =
   "Photograph a handwritten kirana credit notebook. UdhaarAI reads Hindi, Telugu and English pages, flags anything it isn't sure of, and turns the rest into a searchable ledger with reminders, receipts and business insights.";
@@ -49,11 +54,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_SKIP_SCRIPT }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Poppins:wght@600;700;800&family=Manrope:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@500;600&family=Noto+Sans+Telugu:wght@500;600&display=swap"
         />
       </head>
       <body className="relative">

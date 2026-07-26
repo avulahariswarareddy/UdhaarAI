@@ -1,103 +1,79 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 
-const SESSION_KEY = "udhaarai-splash-shown";
-// Sum of window.OM_SCENES durations in public/splash/splash.dc.html.
-// Keep in sync if the scene timings there change.
-const SPLASH_DURATION_MS = 10700;
+export const SPLASH_SESSION_KEY = "udhaarai-splash-shown";
 const FADE_MS = 550;
-// The splash's own runtime (public/splash/support.js) posts __dc_booted to
-// window.parent once it has actually mounted. If that never arrives — a
-// blocked CDN script, a future CSP regression, whatever — bail out fast
-// instead of blocking the page behind a dead overlay for the full duration.
-const BOOT_TIMEOUT_MS = 4000;
 
-// useLayoutEffect fires before the browser paints, so the overlay is up
-// before the real page underneath gets a single frame — plain useEffect
-// would let that first frame flash through. Only safe because this
-// component is client-only ("use client"); guarded so SSR doesn't warn.
-const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+// The animation needs window/rAF and is meaningless during SSR — load it
+// client-only. The overlay div around it (below) is what's actually
+// rendered on the server, so there is never a frame of the real homepage
+// showing through before this mounts.
+const SplashAnimation = dynamic(() => import("./splash/SplashAnimation"), { ssr: false });
 
 /**
- * Plays the animated splash once per browser session, then fades into the
- * real page underneath. Rendered above the app in the root layout; renders
- * nothing (and touches nothing) once a session has already seen it.
+ * Plays the splash once per browser tab session, then fades into the real
+ * page underneath. The overlay markup is always present in the initial
+ * server-rendered HTML (never conditionally mounted) so there is no frame
+ * where the homepage is visible before this covers it. On a repeat load
+ * within the same session, an inline script in the document <head> (see
+ * layout.tsx) hides it via CSS before first paint — see the `splash-skip`
+ * rule in globals.css — so this component just no-ops in that case rather
+ * than fighting the CSS for control of visibility.
  */
 export default function SplashScreen() {
-  const [visible, setVisible] = useState(false);
+  const [playing, setPlaying] = useState(true);
   const [fading, setFading] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  useIsomorphicLayoutEffect(() => {
-    let alreadyShown = true;
+  useEffect(() => {
+    let alreadyShown = false;
     try {
-      alreadyShown = sessionStorage.getItem(SESSION_KEY) === "1";
+      alreadyShown = sessionStorage.getItem(SPLASH_SESSION_KEY) === "1";
     } catch {
-      // sessionStorage unavailable (private mode etc.) — just skip the splash.
+      // sessionStorage unavailable — fall through and just play the splash.
     }
-    if (alreadyShown) return;
+    if (alreadyShown) {
+      setPlaying(false);
+      return;
+    }
 
-    setVisible(true);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
-    const markShown = () => {
-      try {
-        sessionStorage.setItem(SESSION_KEY, "1");
-      } catch {
-        // Ignore — worst case the splash plays again next load.
-      }
-    };
-    const finish = () => {
-      setVisible(false);
-      document.body.style.overflow = prevOverflow;
-      markShown();
-    };
-
-    let booted = false;
-    const onMessage = (e: MessageEvent) => {
-      if (e.source === iframeRef.current?.contentWindow && e.data?.type === "__dc_booted") {
-        booted = true;
-      }
-    };
-    window.addEventListener("message", onMessage);
-
-    const bootTimer = setTimeout(() => {
-      if (!booted) finish();
-    }, BOOT_TIMEOUT_MS);
-    const fadeTimer = setTimeout(() => setFading(true), SPLASH_DURATION_MS);
-    const unmountTimer = setTimeout(finish, SPLASH_DURATION_MS + FADE_MS);
-
     return () => {
-      window.removeEventListener("message", onMessage);
-      clearTimeout(bootTimer);
-      clearTimeout(fadeTimer);
-      clearTimeout(unmountTimer);
       document.body.style.overflow = prevOverflow;
     };
   }, []);
 
-  if (!visible) return null;
+  const handleDone = () => {
+    setFading(true);
+    setTimeout(() => {
+      setPlaying(false);
+      document.body.style.overflow = "";
+      try {
+        sessionStorage.setItem(SPLASH_SESSION_KEY, "1");
+      } catch {
+        // Ignore — worst case the splash plays again next load.
+      }
+    }, FADE_MS);
+  };
+
+  if (!playing) return null;
 
   return (
     <div
+      id="splash-overlay"
       style={{
         position: "fixed",
         inset: 0,
         zIndex: 9999,
-        background: "#05080e",
+        background: "#04070d",
         opacity: fading ? 0 : 1,
-        transition: `opacity ${FADE_MS}ms ease`,
         pointerEvents: fading ? "none" : "auto",
+        transition: `opacity ${FADE_MS}ms ease`,
       }}
     >
-      <iframe
-        ref={iframeRef}
-        src="/splash/splash.dc.html"
-        title="UdhaarAI"
-        style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-      />
+      <SplashAnimation onDone={handleDone} />
     </div>
   );
 }
